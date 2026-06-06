@@ -6,45 +6,86 @@
     <title>Copiando Código PIX...</title>
     <style>
         body { font-family: sans-serif; text-align: center; padding: 40px; background: #f4f7f6; color: #222; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); display: inline-block; max-width: 380px; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); display: inline-block; max-width: 380px; width: 100%; box-sizing: border-box; }
         .sucesso { color: #00bfa5; font-size: 48px; margin-bottom: 10px; }
-        .btn { background: #00bfa5; color: white; border: none; padding: 12px 30px; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 20px; width: 100%; }
+        .btn { background: #00bfa5; color: white; border: none; padding: 15px 30px; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 20px; width: 100%; -webkit-tap-highlight-color: transparent; }
+        .btn:active { background: #009688; }
+        textarea { position: absolute; left: -9999px; opacity: 0; }
     </style>
 </head>
 <body>
     <div class="card">
         <div class="sucesso">✓</div>
-        <h2 style="margin:0 0 10px 0;">Código PIX Copiado!</h2>
-        <p id="msg" style="font-size:14px; color:#666; line-height: 1.4;">Basta abrir o aplicativo do seu banco e colar na opção "PIX Copia e Cola".</p>
-        <button class="btn" onclick="executarCopia()">Copiar Novamente</button>
+        <h2 style="margin:0 0 10px 0;">Código PIX Pronto!</h2>
+        <p id="msg" style="font-size:14px; color:#666; line-height: 1.4;">Clique no botão verde abaixo para copiar o código e pagar no seu banco.</p>
+        <button class="btn" onclick="executarCopia()">📋 CLIQUE PARA COPIAR PIX</button>
     </div>
 
+    <!-- Elemento invisível usado como truque para forçar a cópia no celular -->
+    <textarea id="inputOculto" readonly></textarea>
+
     <script>
-        // Captura o parâmetro correto enviado pelo Node (?pix=...)
         const params = new URLSearchParams(window.location.search);
         let base64Data = params.get('pix');
-        
+        let codigoPixOriginal = "";
+
         if (base64Data) {
             try {
-                // Traduz o Base64 de volta para o formato original (000201...)
-                const codigoPixOriginal = atob(base64Data);
-
-                function executarCopia() {
-                    navigator.clipboard.writeText(codigoPixOriginal).then(() => {
-                        document.getElementById('msg').innerHTML = "<b>Copiado com sucesso!</b><br>Abra o app do seu banco e efetue o pagamento.";
-                    }).catch(() => {
-                        document.getElementById('msg').innerText = "Falha ao copiar automaticamente. Toque no botão verde abaixo.";
-                    });
-                }
-
-                // Executa a cópia instantaneamente ao carregar a página no celular do cliente
-                window.onload = executarCopia;
+                // Decodifica o Base64 vindo da URL (contendo o PIX com *** e tudo mais)
+                codigoPixOriginal = atob(decodeURIComponent(base64Data));
+                document.getElementById('inputOculto').value = codigoPixOriginal;
             } catch (e) {
                 document.getElementById('msg').innerText = "Erro ao processar o código de pagamento.";
             }
         } else {
-            document.getElementById('msg').innerText = "Nenhum código PIX foi detectado nesta URL.";
+            document.getElementById('msg').innerText = "Nenhum código PIX válido foi detectado.";
         }
+
+        function executarCopia() {
+            const txtArea = document.getElementById('inputOculto');
+            
+            // Método moderno para navegadores que permitem
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(codigoPixOriginal).then(() => {
+                    sucessoVisual();
+                }).catch(() => {
+                    copiaMetodoAlternativo(txtArea);
+                });
+            } else {
+                copiaMetodoAlternativo(txtArea);
+            }
+        }
+
+        function copiaMetodoAlternativo(elemento) {
+            try {
+                // Seleciona o texto dentro do campo oculto e força a cópia do sistema do celular
+                elemento.select();
+                elemento.setSelectionRange(0, 99999); // Para iOS / Safari
+                const copiou = document.execCommand('copy');
+                
+                if (copiou) {
+                    sucessoVisual();
+                } else {
+                    document.getElementById('msg').innerText = "Falha ao copiar. Segure o dedo no código e copie manualmente.";
+                }
+            } catch (err) {
+                document.getElementById('msg').innerText = "Erro ao copiar. Tente atualizar a página.";
+            }
+        }
+
+        function sucessoVisual() {
+            document.getElementById('msg').innerHTML = "<span style='color:#009688; font-weight:bold;'>✅ Código copiado com sucesso!</span><br><br>Abra o aplicativo do seu banco, escolha <b>PIX Copia e Cola</b> e finalize o pagamento.";
+        }
+
+        // Tenta rodar de forma silenciosa ao carregar, mas foca na instrução do botão
+        window.onload = function() {
+            if(codigoPixOriginal) {
+                // Executa uma tentativa automática em segundo plano (pode falhar silenciosamente no mobile)
+                try {
+                    navigator.clipboard.writeText(codigoPixOriginal).then(() => sucessoVisual()).catch(() => {});
+                } catch(e) {}
+            }
+        };
     </script>
 </body>
 </html>

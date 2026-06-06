@@ -20,19 +20,20 @@
         <div class="sucesso">✓</div>
         <h2 id="titulo">Código PIX Pronto!</h2>
         <p id="msg">Clique no botão verde abaixo para copiar o código e pagar no seu banco.</p>
-        <!-- Texto do botão reduzido e mais direto -->
         <button class="btn" id="btnCopiar" onclick="executarCopia()">COPIAR PIX</button>
     </div>
 
     <textarea id="inputOculto" readonly></textarea>
 
     <script>
+        // Captura o parâmetro curto enviado pela URL (?p=...)
         const params = new URLSearchParams(window.location.search);
-        let base64Data = params.get('pix');
+        let base64Data = params.get('p') || params.get('pix'); // Suporta tanto ?p= quanto ?pix= para segurança
         let codigoPixOriginal = "";
 
         if (base64Data) {
             try {
+                // Decodifica o Base64 completo vindo do seu Node.js (com *** e CRC finais)
                 codigoPixOriginal = atob(decodeURIComponent(base64Data));
                 document.getElementById('inputOculto').value = codigoPixOriginal;
             } catch (e) {

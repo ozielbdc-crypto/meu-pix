@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Copiando Código PIX...</title>
+    <title>Código PIX Pronto!</title>
     <style>
         body { font-family: sans-serif; text-align: center; padding: 40px; background: #f4f7f6; color: #222; }
         .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); display: inline-block; max-width: 380px; width: 100%; box-sizing: border-box; }
@@ -18,10 +18,10 @@
         <div class="sucesso">✓</div>
         <h2 style="margin:0 0 10px 0;">Código PIX Pronto!</h2>
         <p id="msg" style="font-size:14px; color:#666; line-height: 1.4;">Clique no botão verde abaixo para copiar o código e pagar no seu banco.</p>
-        <button class="btn" onclick="executarCopia()">📋 CLIQUE PARA COPIAR PIX</button>
+        <button class="btn" id="btnCopiar" onclick="executarCopia()">📋 CLIQUE PARA COPIAR PIX</button>
     </div>
 
-    <!-- Elemento invisível usado como truque para forçar a cópia no celular -->
+    <!-- Elemento invisível usado para forçar a cópia no celular -->
     <textarea id="inputOculto" readonly></textarea>
 
     <script>
@@ -31,7 +31,7 @@
 
         if (base64Data) {
             try {
-                // Decodifica o Base64 vindo da URL (contendo o PIX com *** e tudo mais)
+                // Decodifica o Base64 completo vindo do seu Node.js (com *** e finais)
                 codigoPixOriginal = atob(decodeURIComponent(base64Data));
                 document.getElementById('inputOculto').value = codigoPixOriginal;
             } catch (e) {
@@ -39,12 +39,12 @@
             }
         } else {
             document.getElementById('msg').innerText = "Nenhum código PIX válido foi detectado.";
+            document.getElementById('btnCopiar').style.display = 'none';
         }
 
         function executarCopia() {
             const txtArea = document.getElementById('inputOculto');
             
-            // Método moderno para navegadores que permitem
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(codigoPixOriginal).then(() => {
                     sucessoVisual();
@@ -58,15 +58,14 @@
 
         function copiaMetodoAlternativo(elemento) {
             try {
-                // Seleciona o texto dentro do campo oculto e força a cópia do sistema do celular
                 elemento.select();
-                elemento.setSelectionRange(0, 99999); // Para iOS / Safari
+                elemento.setSelectionRange(0, 99999); // Suporte para iOS / Safari
                 const copiou = document.execCommand('copy');
                 
                 if (copiou) {
                     sucessoVisual();
                 } else {
-                    document.getElementById('msg').innerText = "Falha ao copiar. Segure o dedo no código e copie manualmente.";
+                    document.getElementById('msg').innerText = "Falha ao copiar. Segure o dedo sobre o código e copie manualmente.";
                 }
             } catch (err) {
                 document.getElementById('msg').innerText = "Erro ao copiar. Tente atualizar a página.";
@@ -74,18 +73,14 @@
         }
 
         function sucessoVisual() {
-            document.getElementById('msg').innerHTML = "<span style='color:#009688; font-weight:bold;'>✅ Código copiado com sucesso!</span><br><br>Abra o aplicativo do seu banco, escolha <b>PIX Copia e Cola</b> e finalize o pagamento.";
+            // Altera o texto de instrução e dá o feedback positivo para o cliente
+            document.getElementById('msg').innerHTML = "<span style='color:#009688; font-weight:bold;'>✅ Código copiado com sucesso!</span><br><br>Agora abra o aplicativo do seu banco, escolha a opção <b>PIX Copia e Cola</b> e cole o código para pagar.";
+            
+            // Muda o texto do próprio botão para reforçar o sucesso
+            const botao = document.getElementById('btnCopiar');
+            botao.innerText = "COPIADO!";
+            botao.style.background = "#009688";
         }
-
-        // Tenta rodar de forma silenciosa ao carregar, mas foca na instrução do botão
-        window.onload = function() {
-            if(codigoPixOriginal) {
-                // Executa uma tentativa automática em segundo plano (pode falhar silenciosamente no mobile)
-                try {
-                    navigator.clipboard.writeText(codigoPixOriginal).then(() => sucessoVisual()).catch(() => {});
-                } catch(e) {}
-            }
-        };
     </script>
 </body>
 </html>

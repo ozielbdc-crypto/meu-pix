@@ -20,23 +20,31 @@
     </div>
 
     <script>
-        // Captura o parâmetro enviado pelo Node
+        // Captura o parâmetro correto enviado pelo Node (?pix=...)
         const params = new URLSearchParams(window.location.search);
-        const base64Data = params.get('pix');
+        let base64Data = params.get('pix');
         
-        // Decodifica o PIX para o formato original (000201...)
-        const codigoPixOriginal = atob(base64Data);
+        if (base64Data) {
+            try {
+                // Traduz o Base64 de volta para o formato original (000201...)
+                const codigoPixOriginal = atob(base64Data);
 
-        function executarCopia() {
-            navigator.clipboard.writeText(codigoPixOriginal).then(() => {
-                document.getElementById('msg').innerHTML = "<b>Copiado com sucesso!</b><br>Abra o app do seu banco e efetue o pagamento.";
-            }).catch(() => {
-                document.getElementById('msg').innerText = "Falha ao copiar automaticamente. Toque no botão verde abaixo.";
-            });
+                function executarCopia() {
+                    navigator.clipboard.writeText(codigoPixOriginal).then(() => {
+                        document.getElementById('msg').innerHTML = "<b>Copiado com sucesso!</b><br>Abra o app do seu banco e efetue o pagamento.";
+                    }).catch(() => {
+                        document.getElementById('msg').innerText = "Falha ao copiar automaticamente. Toque no botão verde abaixo.";
+                    });
+                }
+
+                // Executa a cópia instantaneamente ao carregar a página no celular do cliente
+                window.onload = executarCopia;
+            } catch (e) {
+                document.getElementById('msg').innerText = "Erro ao processar o código de pagamento.";
+            }
+        } else {
+            document.getElementById('msg').innerText = "Nenhum código PIX foi detectado nesta URL.";
         }
-
-        // Executa a cópia instantaneamente ao carregar a página no celular do cliente
-        window.onload = executarCopia;
     </script>
 </body>
 </html>
